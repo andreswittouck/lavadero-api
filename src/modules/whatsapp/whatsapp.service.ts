@@ -1,0 +1,82 @@
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Client, LocalAuth } from 'whatsapp-web.js';
+import { ensureDirectoryExists } from '../../utils/file-utils';
+import qrImage from 'qr-image';
+import fs from 'fs';
+import { mkdir } from 'fs/promises';
+
+@Injectable()
+export class WhatsappService implements OnModuleInit, OnModuleDestroy {
+  private client: Client;
+
+  async onModuleInit() {
+    try {
+      console.log('Inicializando WhatsApp Web...');
+      await ensureDirectoryExists('static'); // Asegura que el directorio `static` exista
+
+      this.client = new Client({
+        puppeteer: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        },
+        authStrategy: new LocalAuth(), // Estrategia de autenticación local
+      });
+
+      this.client.on('qr', async (qr) => {
+        console.log('QR recibido:', qr);
+        await this.saveQrCode(qr, 'static', 'step-2-qr-detected.png');
+        console.log('QR guardado en static/step-2-qr-detected.png');
+      });
+
+      this.client.on('ready', () => {
+        console.log('Cliente de WhatsApp Web listo.');
+      });
+
+      await this.client.initialize();
+    } catch (error) {
+      console.error('Error inicializando WhatsApp Web:', error);
+    }
+  }
+
+  async onModuleDestroy() {
+    console.log('Cerrando cliente de WhatsApp...');
+    await this.client.destroy();
+  }
+
+  async sendMessage(phoneNumber: string, message: string): Promise<string> {
+    try {
+      console.log(`Enviando mensaje a ${phoneNumber}: ${message}`);
+      const numberId = await this.client.getNumberId(phoneNumber);
+      if (!numberId) {
+        throw new Error(
+          `El número ${phoneNumber} no está registrado en WhatsApp.`,
+        );
+      }
+      await this.client.sendMessage(numberId._serialized, message);
+      return `Mensaje enviado a ${phoneNumber}`;
+    } catch (error) {
+      console.error('Error al enviar el mensaje2:', error);
+      if (error instanceof Error) {
+        throw new Error(`Error enviando mensaje3: ${error.message}`);
+      } else {
+        throw new Error('Error enviando mensaje: Error desconocido');
+      }
+    }
+  }
+
+  private async saveQrCode(
+    qrData: string,
+    directory: string,
+    fileName: string,
+  ) {
+    await mkdir(directory, { recursive: true });
+    const qr = qrImage.image(qrData, { type: 'png' });
+    const filePath = `${directory}/${fileName}`;
+
+    await new Promise<void>((resolve, reject) => {
+      const writeStream = fs.createWriteStream(filePath);
+      qr.pipe(writeStream);
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+  }
+}
