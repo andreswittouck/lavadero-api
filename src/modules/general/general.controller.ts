@@ -1,10 +1,20 @@
 import { Controller, Post, Body, Get, Res } from '@nestjs/common';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { Response } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'modules/database/entities/user.entity';
+import { Repository } from 'typeorm';
+import { VehicleEntity } from 'modules/database/entities/vehicle.entity';
 
 @Controller('general')
 export class GeneralController {
-  constructor(private readonly whatsappService: WhatsappService) {}
+  constructor(
+    private readonly whatsappService: WhatsappService,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(VehicleEntity)
+    private vehicleRepository: Repository<VehicleEntity>,
+  ) {}
 
   @Post('send-message')
   async sendMessage(
@@ -31,5 +41,22 @@ export class GeneralController {
     } catch (error) {
       return res.status(404).json({ message: 'QR no encontrado.' });
     }
+  }
+
+  @Post('users')
+  async createUser(@Body() userData: Partial<UserEntity>) {
+    const user = this.userRepository.create(userData);
+    return this.userRepository.save(user);
+  }
+
+  @Get('users')
+  async getUsers() {
+    return this.userRepository.find({ relations: ['vehicles'] });
+  }
+
+  @Post('vehicles')
+  async createVehicle(@Body() vehicleData: Partial<VehicleEntity>) {
+    const vehicle = this.vehicleRepository.create(vehicleData);
+    return this.vehicleRepository.save(vehicle);
   }
 }
