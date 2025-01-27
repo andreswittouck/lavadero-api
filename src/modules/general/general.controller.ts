@@ -16,20 +16,21 @@ export class GeneralController {
     private vehicleRepository: Repository<VehicleEntity>,
   ) {}
 
-  @Post('send-message')
-  async sendMessage(
-    @Body('service') service: string,
+  @Post('queue-message')
+  async enqueueMessage(
     @Body('phoneNumber') phoneNumber: string,
     @Body('message') message: string,
   ) {
-    console.log('Service:', service); // Diagnóstico
-    console.log('PhoneNumber:', phoneNumber); // Diagnóstico
-    console.log('Message:', message); // Diagnóstico
+    await this.whatsappService.enqueueMessage(phoneNumber, message);
+    return { status: 'Mensaje encolado' };
+  }
 
-    if (service === 'whatsapp') {
-      return this.whatsappService.sendMessage(phoneNumber, message);
-    }
-    return { error: 'Service not supported' };
+  @Post('send-message')
+  async sendMessage(
+    @Body('phoneNumber') phoneNumber: string,
+    @Body('message') message: string,
+  ) {
+    return this.whatsappService.sendMessage(phoneNumber, message);
   }
 
   @Get('qr')

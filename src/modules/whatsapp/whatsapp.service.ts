@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Client, LocalAuth } from 'whatsapp-web.js';
+import { RedisService } from '../redis/redis.service';
 import { ensureDirectoryExists } from '../../utils/file-utils';
 import qrImage from 'qr-image';
 import fs from 'fs';
@@ -8,17 +9,20 @@ import { mkdir } from 'fs/promises';
 @Injectable()
 export class WhatsappService implements OnModuleInit, OnModuleDestroy {
   private client: Client;
+  private readonly queueName = 'whatsapp_messages';
+
+  constructor(private readonly redisService: RedisService) {}
 
   async onModuleInit() {
     try {
       console.log('Inicializando WhatsApp Web...');
-      await ensureDirectoryExists('static'); // Asegura que el directorio `static` exista
+      await ensureDirectoryExists('static');
 
       this.client = new Client({
         puppeteer: {
           args: ['--no-sandbox', '--disable-setuid-sandbox'],
         },
-        authStrategy: new LocalAuth(), // Estrategia de autenticación local
+        authStrategy: new LocalAuth(),
       });
 
       this.client.on('qr', async (qr) => {
@@ -29,6 +33,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
 
       this.client.on('ready', () => {
         console.log('Cliente de WhatsApp Web listo.');
+        this.processMessageQueue(); // Procesar mensajes en cola al iniciar
       });
 
       await this.client.initialize();
@@ -54,12 +59,33 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       await this.client.sendMessage(numberId._serialized, message);
       return `Mensaje enviado a ${phoneNumber}`;
     } catch (error) {
-      console.error('Error al enviar el mensaje2:', error);
+      console.error('Error al enviar el mensaje:', error);
       if (error instanceof Error) {
-        throw new Error(`Error enviando mensaje3: ${error.message}`);
+        throw new Error(`Error enviando mensaje: ${error.message}`);
       } else {
         throw new Error('Error enviando mensaje: Error desconocido');
       }
+    }
+  }
+
+  async enqueueMessage(phoneNumber: string, message: string): Promise<void> {
+    const payload = JSON.stringify({ phoneNumber, message });
+    await this.redisService.pushToQueue(this.queueName, payload);
+    console.log(`Mensaje encolado: ${payload}`);
+  }
+
+  async processMessageQueue(): Promise<void> {
+    while (true) {
+      const message = await this.redisService.popFromQueue(this.queueName);
+      if (!message) {
+        console.log('Cola vacía, esperando mensajes...');
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // Esperar 5 segundos
+        continue;
+      }
+
+      const { phoneNumber, message: text } = JSON.parse(message);
+      console.log(`Procesando mensaje: Teléfono=${phoneNumber}, Texto=${text}`);
+      await this.sendMessage(phoneNumber, text);
     }
   }
 
