@@ -18,12 +18,12 @@ export class UserEntity {
   @Column({ unique: true })
   phone: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   email: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToMany(() => VehicleEntity, (vehicle) => vehicle.owner)
+  @OneToMany(() => VehicleEntity, (vehicle) => vehicle.owner, { cascade: true })
   vehicles: VehicleEntity[];
 }

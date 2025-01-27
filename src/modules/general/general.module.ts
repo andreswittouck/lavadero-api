@@ -8,7 +8,7 @@ import { UserService } from 'modules/user/user.service';
 import { VehicleService } from 'modules/vehicle/vehicle.service';
 import { UserController } from 'modules/user/user.controller';
 import { VehicleController } from 'modules/vehicle/vehicle.controller';
-import { RedisModule } from 'modules/redis/redis.module';
+// import { RedisModule } from 'modules/redis/redis.module';
 
 @Module({
   imports: [

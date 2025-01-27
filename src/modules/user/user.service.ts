@@ -25,4 +25,16 @@ export class UserService {
       relations: ['vehicles'],
     });
   }
+
+  async editUser(
+    id: number,
+    userData: Partial<UserEntity>,
+  ): Promise<UserEntity> {
+    await this.userRepository.update(id, userData);
+    return this.findOne(id); // Devuelve el usuario actualizado
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await this.userRepository.delete(id);
+  }
 }
