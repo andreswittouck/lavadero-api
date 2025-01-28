@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Confirmar que Chromium está instalado
+RUN which chromium && chromium --version
+
 # Copiar archivos necesarios
 COPY package*.json tsconfig.json ./
 RUN npm install
@@ -57,6 +60,9 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Confirmar que Chromium está instalado
+RUN which chromium && chromium --version
+
 # Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./package.json
@@ -66,6 +72,9 @@ COPY --from=builder /app/static ./static
 
 # Asegurar que `static/` exista en caso de que no se haya copiado
 RUN mkdir -p /app/static
+
+# Configurar permisos
+RUN chmod -R 755 /app/static
 
 # Instalar dependencias de producción
 RUN npm install --omit=dev
