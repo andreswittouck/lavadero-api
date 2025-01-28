@@ -10,6 +10,9 @@ export class RedisService {
     this.redisClient = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
+      retryStrategy: (times) => {
+        return Math.min(times * 100, 3000); // Reintenta hasta 3 segundos
+      },
     });
   }
 
