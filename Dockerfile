@@ -29,7 +29,7 @@ RUN npm install
 COPY . .
 
 # Crear el directorio `static` para almacenar los QR
-RUN mkdir -p static
+RUN mkdir -p /app/static
 
 # Compilar el proyecto
 RUN npm run build && ls dist
@@ -57,10 +57,17 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copiar los archivos compilados, dependencias y el directorio `static`
+# Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./package.json
-COPY static ./static
+
+# Copiar la carpeta `static` desde el build
+COPY --from=builder /app/static ./static
+
+# Asegurar que `static/` exista en caso de que no se haya copiado
+RUN mkdir -p /app/static
+
+# Instalar dependencias de producción
 RUN npm install --omit=dev
 
 # Configurar Puppeteer para usar el Chromium instalado
