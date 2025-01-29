@@ -22,7 +22,10 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Confirmar que Chromium está instalado
-RUN which chromium && chromium --version
+# Verificar la instalación de Chromium
+RUN echo "Checking Chromium installation..." && \
+    which chromium || echo "Chromium NOT found" && \
+    chromium --version || echo "Chromium version not available"
 
 # Copiar archivos necesarios
 COPY package*.json tsconfig.json ./
@@ -61,7 +64,10 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Confirmar que Chromium está instalado
-RUN which chromium && chromium --version
+# Verificar la instalación de Chromium
+RUN echo "Checking Chromium installation..." && \
+    which chromium || echo "Chromium NOT found" && \
+    chromium --version || echo "Chromium version not available"
 
 # Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist

@@ -20,6 +20,8 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
 
       this.client = new Client({
         puppeteer: {
+          executablePath:
+            process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
           args: ['--no-sandbox', '--disable-setuid-sandbox'],
         },
         authStrategy: new LocalAuth(),
