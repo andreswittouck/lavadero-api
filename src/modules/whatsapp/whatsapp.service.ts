@@ -5,6 +5,7 @@ import { ensureDirectoryExists } from '../../utils/file-utils';
 import qrImage from 'qr-image';
 import fs from 'fs';
 import { mkdir } from 'fs/promises';
+import path from 'path';
 
 @Injectable()
 export class WhatsappService implements OnModuleInit, OnModuleDestroy {
@@ -96,14 +97,25 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
     directory: string,
     fileName: string,
   ) {
-    await mkdir(directory, { recursive: true });
+    const dirPath = path.resolve(directory);
+
+    try {
+      await mkdir(dirPath, { recursive: true });
+      console.log(`✅ Directorio creado: ${dirPath}`);
+    } catch (err) {
+      console.error(`⚠️ Error creando directorio ${dirPath}:`, err);
+    }
+
     const qr = qrImage.image(qrData, { type: 'png' });
-    const filePath = `${directory}/${fileName}`;
+    const filePath = path.join(dirPath, fileName);
 
     await new Promise<void>((resolve, reject) => {
       const writeStream = fs.createWriteStream(filePath);
       qr.pipe(writeStream);
-      writeStream.on('finish', resolve);
+      writeStream.on('finish', () => {
+        console.log(`✅ QR guardado en: ${filePath}`);
+        resolve();
+      });
       writeStream.on('error', reject);
     });
   }
