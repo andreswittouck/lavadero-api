@@ -70,11 +70,19 @@ RUN echo "Checking Chromium installation..." && \
     chromium --version || echo "Chromium version not available"
 
 # Copiar los archivos compilados y dependencias
+# Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules  
+COPY --from=builder /app/package*.json ./  
+
 COPY package*.json ./package.json
 
 # Copiar la carpeta `static` desde el build
 COPY --from=builder /app/static ./static
+
+RUN echo "Verificando archivos en /app" && ls -la /app
+RUN echo "Verificando archivos en /app/dist" && ls -la /app/dist
+
 
 # Asegurar que `static/` exista en caso de que no se haya copiado
 RUN mkdir -p /app/static
