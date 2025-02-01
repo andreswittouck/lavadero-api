@@ -1,8 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 async function bootstrap() {
+  console.log('DB_HOST:', process.env.DB_HOST);
+  console.log('DB_USER:', process.env.DB_USER);
+  console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+  console.log('REDIS_HOST:', process.env.REDIS_HOST);
   const app = await NestFactory.create(AppModule, {
     logger: ['log', 'debug', 'error', 'verbose', 'warn'],
   });

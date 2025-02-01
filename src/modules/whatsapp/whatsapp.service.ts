@@ -16,43 +16,52 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      console.log('Inicializando WhatsApp Web...');
+      console.log('📲 Inicializando WhatsApp Web...');
       await ensureDirectoryExists('static');
 
       this.client = new Client({
         puppeteer: {
           executablePath:
-            process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            process.env.PUPPETEER_EXECUTABLE_PATH ||
+            '/usr/bin/chromium-browser',
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--window-size=1920x1080',
+          ],
         },
         authStrategy: new LocalAuth(),
       });
 
       this.client.on('qr', async (qr) => {
-        console.log('QR recibido:', qr);
-        await this.saveQrCode(qr, 'static', 'step-2-qr-detected.png');
-        console.log('QR guardado en static/step-2-qr-detected.png');
+        console.log('📸 QR recibido:', qr);
+        await this.saveQrCode(qr, 'static', 'qr.png');
+        console.log('✅ QR guardado en static/qr.png');
       });
 
       this.client.on('ready', () => {
-        console.log('Cliente de WhatsApp Web listo.');
-        this.processMessageQueue(); // Procesar mensajes en cola al iniciar
+        console.log('✅ Cliente de WhatsApp Web listo.');
+        this.processMessageQueue();
       });
 
       await this.client.initialize();
     } catch (error) {
-      console.error('Error inicializando WhatsApp Web:', error);
+      console.error('❌ Error inicializando WhatsApp Web:', error);
     }
   }
 
   async onModuleDestroy() {
-    console.log('Cerrando cliente de WhatsApp...');
+    console.log('🛑 Cerrando cliente de WhatsApp...');
     await this.client.destroy();
   }
 
   async sendMessage(phoneNumber: string, message: string): Promise<string> {
     try {
-      console.log(`Enviando mensaje a ${phoneNumber}: ${message}`);
+      console.log(`📤 Enviando mensaje a ${phoneNumber}: ${message}`);
       const numberId = await this.client.getNumberId(phoneNumber);
       if (!numberId) {
         throw new Error(
@@ -60,34 +69,34 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         );
       }
       await this.client.sendMessage(numberId._serialized, message);
-      return `Mensaje enviado a ${phoneNumber}`;
+      return `✅ Mensaje enviado a ${phoneNumber}`;
     } catch (error) {
-      console.error('Error al enviar el mensaje:', error);
-      if (error instanceof Error) {
-        throw new Error(`Error enviando mensaje: ${error.message}`);
-      } else {
-        throw new Error('Error enviando mensaje: Error desconocido');
-      }
+      console.error('❌ Error al enviar el mensaje:', error);
+      throw new Error(
+        error instanceof Error ? error.message : 'Error desconocido',
+      );
     }
   }
 
   async enqueueMessage(phoneNumber: string, message: string): Promise<void> {
     const payload = JSON.stringify({ phoneNumber, message });
     await this.redisService.pushToQueue(this.queueName, payload);
-    console.log(`Mensaje encolado: ${payload}`);
+    console.log(`🕒 Mensaje encolado: ${payload}`);
   }
 
   async processMessageQueue(): Promise<void> {
     while (true) {
       const message = await this.redisService.popFromQueue(this.queueName);
       if (!message) {
-        console.log('Cola vacía, esperando mensajes...');
+        console.log('📭 Cola vacía, esperando mensajes...');
         await new Promise((resolve) => setTimeout(resolve, 5000)); // Esperar 5 segundos
         continue;
       }
 
       const { phoneNumber, message: text } = JSON.parse(message);
-      console.log(`Procesando mensaje: Teléfono=${phoneNumber}, Texto=${text}`);
+      console.log(
+        `📩 Procesando mensaje: Teléfono=${phoneNumber}, Texto=${text}`,
+      );
       await this.sendMessage(phoneNumber, text);
     }
   }

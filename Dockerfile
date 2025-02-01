@@ -6,7 +6,7 @@ WORKDIR /app
 # Configurar Puppeteer para evitar la descarga de Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Instalar dependencias y Chromium
+# Instalar dependencias del sistema y Chromium
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -21,11 +21,10 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Confirmar que Chromium está instalado
 # Verificar la instalación de Chromium
 RUN echo "Checking Chromium installation..." && \
-    which chromium || echo "Chromium NOT found" && \
-    chromium --version || echo "Chromium version not available"
+    which chromium-browser || echo "Chromium NOT found" && \
+    chromium-browser --version || echo "Chromium version not available"
 
 # Copiar archivos necesarios
 COPY package*.json tsconfig.json ./
@@ -63,26 +62,17 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Confirmar que Chromium está instalado
 # Verificar la instalación de Chromium
 RUN echo "Checking Chromium installation..." && \
-    which chromium || echo "Chromium NOT found" && \
-    chromium --version || echo "Chromium version not available"
+    which chromium-browser || echo "Chromium NOT found" && \
+    chromium-browser --version || echo "Chromium version not available"
 
-# Copiar los archivos compilados y dependencias
 # Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules  
-COPY --from=builder /app/package*.json ./  
-
 COPY package*.json ./package.json
 
 # Copiar la carpeta `static` desde el build
 COPY --from=builder /app/static ./static
-
-RUN echo "Verificando archivos en /app" && ls -la /app
-RUN echo "Verificando archivos en /app/dist" && ls -la /app/dist
-
 
 # Asegurar que `static/` exista en caso de que no se haya copiado
 RUN mkdir -p /app/static
@@ -94,7 +84,7 @@ RUN chmod -R 755 /app/static
 RUN npm install --omit=dev
 
 # Configurar Puppeteer para usar el Chromium instalado
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Exponer el puerto
 EXPOSE 3000
