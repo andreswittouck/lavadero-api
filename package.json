@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "rm -f tsconfig.build.tsbuildinfo",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main.js",
@@ -26,6 +27,7 @@
     "@nestjs/platform-express": "^11.0.6",
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/typeorm": "^11.0.0",
+    "dotenv": "^16.4.7",
     "ioredis": "^5.4.2",
     "pg": "^8.13.1",
     "qr-image": "^3.2.0",
