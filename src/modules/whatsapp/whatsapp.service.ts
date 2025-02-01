@@ -23,7 +23,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         puppeteer: {
           executablePath:
             process.env.PUPPETEER_EXECUTABLE_PATH ||
-            '/usr/bin/chromium-browser',
+            '/usr/bin/google-chrome-stable',
           headless: true,
           args: [
             '--no-sandbox',

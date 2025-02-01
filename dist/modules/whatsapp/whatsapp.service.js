@@ -33,7 +33,7 @@ let WhatsappService = class WhatsappService {
             this.client = new whatsapp_web_js_1.Client({
                 puppeteer: {
                     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH ||
-                        '/usr/bin/chromium-browser',
+                        '/usr/bin/google-chrome-stable',
                     headless: true,
                     args: [
                         '--no-sandbox',
