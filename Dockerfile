@@ -6,7 +6,7 @@ WORKDIR /app
 # Configurar Puppeteer para evitar la descarga de Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Instalar Google Chrome en lugar de Chromium
+# Instalar dependencias y Google Chrome Stable
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -26,8 +26,8 @@ RUN apt-get update && apt-get install -y \
     apt-get update && apt-get install -y google-chrome-stable && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Verificar la instalación de Chrome
-RUN google-chrome --version
+# Verificar instalación de Google Chrome
+RUN which google-chrome-stable && google-chrome-stable --version
 
 # Copiar archivos necesarios
 COPY package*.json tsconfig.json ./
@@ -50,7 +50,7 @@ WORKDIR /app
 # Configurar Puppeteer para evitar la descarga de Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Instalar Google Chrome en lugar de Chromium
+# Instalar dependencias y Google Chrome Stable
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -70,8 +70,8 @@ RUN apt-get update && apt-get install -y \
     apt-get update && apt-get install -y google-chrome-stable && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Verificar la instalación de Chrome
-RUN google-chrome --version
+# Verificar instalación de Google Chrome
+RUN which google-chrome-stable && google-chrome-stable --version
 
 # Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
@@ -92,8 +92,8 @@ RUN npm install --omit=dev
 # Configurar Puppeteer para usar Google Chrome en Render
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
-# Exponer el puerto
-EXPOSE 3000
+# Exponer el puerto correcto según Render
+EXPOSE 10000
 
 # Comando para iniciar la aplicación
 CMD ["node", "dist/main.js"]
