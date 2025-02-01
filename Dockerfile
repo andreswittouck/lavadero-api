@@ -6,9 +6,11 @@ WORKDIR /app
 # Configurar Puppeteer para evitar la descarga de Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Instalar dependencias del sistema y Chromium
+# Instalar Google Chrome en lugar de Chromium
 RUN apt-get update && apt-get install -y \
-    chromium \
+    wget \
+    curl \
+    gnupg \
     libnss3 \
     libatk1.0-0 \
     libxcomposite1 \
@@ -19,12 +21,13 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     fonts-liberation \
     --no-install-recommends && \
+    wget -qO- https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && apt-get install -y google-chrome-stable && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Verificar la instalación de Chromium
-RUN echo "Checking Chromium installation..." && \
-    which chromium-browser || echo "Chromium NOT found" && \
-    chromium-browser --version || echo "Chromium version not available"
+# Verificar la instalación de Chrome
+RUN google-chrome --version
 
 # Copiar archivos necesarios
 COPY package*.json tsconfig.json ./
@@ -47,9 +50,11 @@ WORKDIR /app
 # Configurar Puppeteer para evitar la descarga de Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Instalar dependencias y Chromium
+# Instalar Google Chrome en lugar de Chromium
 RUN apt-get update && apt-get install -y \
-    chromium \
+    wget \
+    curl \
+    gnupg \
     libnss3 \
     libatk1.0-0 \
     libxcomposite1 \
@@ -60,18 +65,19 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     fonts-liberation \
     --no-install-recommends && \
+    wget -qO- https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && apt-get install -y google-chrome-stable && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Verificar la instalación de Chromium
-RUN echo "Checking Chromium installation..." && \
-    which chromium-browser || echo "Chromium NOT found" && \
-    chromium-browser --version || echo "Chromium version not available"
+# Verificar la instalación de Chrome
+RUN google-chrome --version
 
 # Copiar los archivos compilados y dependencias
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./package.json
 
-# Copiar la carpeta `static` desde el build
+# Copiar la carpeta `static`
 COPY --from=builder /app/static ./static
 
 # Asegurar que `static/` exista en caso de que no se haya copiado
@@ -83,8 +89,8 @@ RUN chmod -R 755 /app/static
 # Instalar dependencias de producción
 RUN npm install --omit=dev
 
-# Configurar Puppeteer para usar el Chromium instalado
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Configurar Puppeteer para usar Google Chrome en Render
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # Exponer el puerto
 EXPOSE 3000
