@@ -35,14 +35,17 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
-const swagger_1 = require("@nestjs/swagger");
 const dotenv = __importStar(require("dotenv"));
+const config_1 = require("@nestjs/config");
+const swagger_1 = require("./v1/domain/swagger");
 dotenv.config();
+const servers = {
+    [process.env.NODE_ENV]: {
+        url: process.env.BASE_URL,
+        description: process.env.URL_DESCRIPTION || '',
+    },
+};
 async function bootstrap() {
-    console.log('DB_HOST:', process.env.DB_HOST);
-    console.log('DB_USER:', process.env.DB_USER);
-    console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
-    console.log('REDIS_HOST:', process.env.REDIS_HOST);
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         logger: ['log', 'debug', 'error', 'verbose', 'warn'],
     });
@@ -50,15 +53,10 @@ async function bootstrap() {
         origin: '*',
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     });
-    const config = new swagger_1.DocumentBuilder()
-        .setTitle('Lavadero API')
-        .setDescription('API para la gestión de lavadero')
-        .setVersion('1.0')
-        .addTag('lavadero')
-        .build();
-    const document = swagger_1.SwaggerModule.createDocument(app, config);
-    swagger_1.SwaggerModule.setup('api/docs', app, document);
-    await app.listen(process.env.PORT ?? 3000);
+    const configService = app.get(config_1.ConfigService);
+    const port = configService.get('APP_PORT');
+    await (0, swagger_1.configSwagger)(app, 'Lavadero API', 'API para la gestión de lavadero', servers);
+    await app.listen(port, '0.0.0.0');
 }
 bootstrap();
 //# sourceMappingURL=main.js.map
